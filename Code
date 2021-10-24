@@ -1,0 +1,359 @@
+SELECT TOP 100 
+	soh.SalesOrderID 
+	,RevisionNumber 
+	,OrderDate 
+	/* The Replace function replaces a value with a different value */
+	,Replace(Replace(Replace(replace(replace(replace(Status, 1, 'In Process'), 2, 'Approved'), 3, 'Backordered'), 4, 'Rejected'), 5, 'Shipped'), 6, 'Cancelled') AS OrderStatusText
+	,SalesOrderNumber
+	,SubTotal
+	,TaxAmt
+	,Freight
+	,TotalDue
+	,REPLACE(STR(OrderQty, 4), ' ', '0') AS OrderQtyText
+	,UnitPrice
+	,UnitPriceDiscount
+	,LineTotal
+	,City AS ShipToCity
+	,sp.Name AS ShipToState
+	,PostalCode AS ShipToZip
+	,sp.CountryRegionCode AS ShipToCountryCode
+	,cr.Name AS ShipToCountryName
+	,pm.Name AS ModelName
+	,pc.Name AS CategoryName
+FROM Sales.SalesOrderHeader soh
+	INNER JOIN Sales.SalesOrderDetail sod
+		ON soh.SalesOrderID = sod.SalesOrderID
+	INNER JOIN Person.Address a
+		ON soh.ShipToAddressID = a.AddressID
+	INNER JOIN Person.StateProvince sp
+		ON a.StateProvinceID = sp.StateProvinceID
+	INNER JOIN Person.CountryRegion cr
+		ON cr.CountryRegionCode = sp.CountryRegionCode
+	INNER JOIN Production.Product p
+		ON sod.ProductID = p.ProductID
+	INNER JOIN Production.ProductModel pm
+		ON p.ProductModelID = pm.ProductModelID
+	INNER JOIN Production.ProductSubcategory ps
+		ON p.ProductSubcategoryID = ps.ProductSubcategoryID
+	INNER JOIN Production.ProductCategory pc
+		ON ps.ProductCategoryID = pc.ProductCategoryID
+
+
+GO
+
+CREATE PROCEDURE [dbo].[SalesOrderDetails]
+AS
+SELECT
+	soh.SalesOrderID 
+	,RevisionNumber
+	,OrderDate 
+	,Replace(Replace(Replace(replace(replace(replace(Status, 1, 'In Process'), 2, 'Approved'), 3, 'Backordered'), 4, 'Rejected'), 5, 'Shipped'), 6, 'Cancelled') AS OrderStatusText
+	,SalesOrderNumber
+	,SubTotal
+	,TaxAmt
+	,Freight
+	,TotalDue
+	,REPLACE(STR(OrderQty, 4), ' ', '0') AS OrderQtyText
+	,UnitPrice
+	,UnitPriceDiscount
+	,LineTotal
+	,City AS ShipToCity
+	,sp.Name AS ShipToState
+	,PostalCode AS ShipToZip
+	,sp.CountryRegionCode AS ShipToCountryCode
+	,cr.Name AS ShipToCountryName
+	,pm.Name AS ModelName
+	,pc.Name AS CategoryName
+FROM Sales.SalesOrderHeader soh
+	INNER JOIN Sales.SalesOrderDetail sod
+		ON soh.SalesOrderID = sod.SalesOrderID
+	INNER JOIN Person.Address a
+		ON soh.ShipToAddressID = a.AddressID
+	INNER JOIN Person.StateProvince sp
+		ON a.StateProvinceID = sp.StateProvinceID
+	INNER JOIN Person.CountryRegion cr
+		ON cr.CountryRegionCode = sp.CountryRegionCode
+	INNER JOIN Production.Product p
+		ON sod.ProductID = p.ProductID
+	INNER JOIN Production.ProductModel pm
+		ON p.ProductModelID = pm.ProductModelID
+	INNER JOIN Production.ProductSubcategory ps
+		ON p.ProductSubcategoryID = ps.ProductSubcategoryID
+	INNER JOIN Production.ProductCategory pc
+		ON ps.ProductCategoryID = pc.ProductCategoryID
+WHERE OrderDate BETWEEN
+	'2011-06-01' AND '2011-06-30'
+	/*'2011-07-04' AND '2011-07-10'*/
+	/*'2012-01-01' AND '2012-12-31'*/
+	/*'2013-12-01' AND '2013-12-25'*/
+GO
+
+DROP PROCEDURE [dbo].[SalesOrderDetails]
+
+GO
+
+EXEC [dbo].[SalesOrderDetails]
+
+GO
+
+CREATE PROCEDURE [dbo].[SalesOrdersDataReview]
+AS
+
+/* # allows you to create a temporary table */
+CREATE TABLE #CalculatedSubtotal
+	(
+	SalesOrderID INT
+	,CalculatedSubtotalFromDetail DEC (15,6)
+	)
+
+
+INSERT INTO 
+	#CalculatedSubtotal
+	SELECT
+		SalesOrderID
+		,SUM(LineTotal)
+	FROM
+		Sales.SalesOrderDetail
+	/* GROUP BY takes all of the rows with the same specified column and combines them. */
+	GROUP BY 
+		SalesOrderID
+
+
+SELECT
+	soh.SalesOrderID
+	,SalesOrderNumber
+	,SubTotal AS OriginalSubtotal
+	,CalculatedSubtotalFromDetail
+	,SubTotal - CalculatedSubtotalFromDetail AS Difference
+FROM
+	Sales.SalesOrderHeader soh
+	INNER JOIN Sales.SalesOrderDetail sod
+	ON soh.SalesOrderID = sod.SalesOrderID
+	INNER JOIN #CalculatedSubtotal cs
+	ON soh.SalesOrderID = cs.SalesOrderID
+
+GO
+
+DROP PROCEDURE [dbo].[SalesOrdersDataReview]
+
+GO
+
+
+EXEC [dbo].[SalesOrdersDataReview]
+
+GO
+
+CREATE PROCEDURE [dbo].[XMLFun]
+AS
+CREATE TABLE #breakfast_menu
+	(
+	FoodId VARCHAR(4)
+	,Name VARCHAR(30)
+	,Price VARCHAR(7)
+	,Description VARCHAR(100)
+	,Calories VARCHAR(4)
+	)
+
+INSERT INTO
+	#breakfast_menu
+	SELECT
+		/* The query method allows you to extract data from a XML file. The value method is like the query method but you can specify the datatype */
+		a.food.value('@id','VARCHAR(4)') AS FoodId
+		,a.food.query('name').value('.','VARCHAR(30)') AS Name
+		,a.food.query('price').value('.','VARCHAR(7)') AS Price
+		,a.food.query('description').value('.','VARCHAR(100)') AS Description
+		,a.food.query('calories').value('.','VARCHAR(4)') AS Calories
+	FROM
+	(
+	SELECT
+		/* CAST transforms c into the XML datatype */
+		CAST(c AS XML)
+	FROM
+	/* OPENROWSET connects SQL Server with the XML file. Bulk and SINGLE_BLOB turns the imported data into a single row */
+		OPENROWSET(BULK 'C:\XML_BreakfastMenu.xml', SINGLE_BLOB) AS t(c)
+	) AS s(c)
+	/* CROSS APPLY with nodes goes through the XML and returns the XML in rows based on the nodes in the XML */
+	CROSS APPLY c.nodes('breakfast_menu/food') AS a(food)
+
+
+SELECT 
+	FoodId AS [@id]
+	,Name AS [name]
+	,Price AS [price]
+	,Description AS [description]
+	,Calories AS [calories]
+FROM 
+	#breakfast_menu
+FOR XML PATH('food'), ROOT('breakfast_menu')
+
+SELECT
+	/* The STUFF fuction goes and deletes part of a string and inserts what you specified into the string */
+	STUFF(Name + ', ', 1, 0, '')
+FROM
+	#breakfast_menu
+FOR XML PATH(''), ROOT('list')
+
+
+GO
+
+DROP TABLE #breakfast_menu
+
+GO
+
+DROP PROCEDURE [dbo].[XMLFun]
+
+GO
+
+EXEC [dbo].[XMLFun]
+
+GO
+
+CREATE PROCEDURE [dbo].[SalesOrdersDataReviewWithCTE]
+AS
+/* This Creates a CTE. A CTE is like a temporary table exept CTEs only exist for one querry */
+WITH CTE_CalculatedSubtotal AS 
+(
+SELECT
+	SalesOrderID
+	,SUM(LineTotal) as CalculatedSubtotalFromDetail
+FROM
+	Sales.SalesOrderDetail
+GROUP BY 
+	SalesOrderID
+)
+SELECT
+	soh.SalesOrderID
+	,SalesOrderNumber
+	,SubTotal AS OriginalSubtotal
+	,CalculatedSubtotalFromDetail
+	,SubTotal - CalculatedSubtotalFromDetail AS Difference
+FROM
+	Sales.SalesOrderHeader soh
+	INNER JOIN Sales.SalesOrderDetail sod
+	ON soh.SalesOrderID = sod.SalesOrderID
+	INNER JOIN CTE_CalculatedSubtotal cs
+	ON soh.SalesOrderID = cs.SalesOrderID
+
+GO
+
+CREATE PROCEDURE [dbo].[SalesByYearBySalesperson]
+AS
+SELECT
+	SalesPersonID
+	,[2011]
+	,[2012]
+	,[2013]
+	,[2014]
+FROM
+(
+SELECT DISTINCT
+	SalesPersonID
+	,DATENAME(YEAR, OrderDate) [Year]
+	,SubTotal
+FROM Sales.SalesOrderHeader soh
+) AS Src
+/* PIVOT will transform a value into a column. In this case it is taking the Subtotal Sum for each year and making a column out of that data for each year */
+PIVOT
+(
+	SUM(SubTotal)
+	/* This makes the column names */ 
+	FOR [Year] IN ([2011], [2012], [2013], [2014])
+) AS Pvt
+
+GO
+
+CREATE FUNCTION dbo.ufnMyFunction
+/* This creates the parameters for the function */
+(
+	@YourNumber INT
+	,@StringSize INT
+)
+RETURNS VARCHAR(30)
+AS
+BEGIN
+	RETURN 
+		(SELECT 
+			/* Replicate will replicate the string for the number of times specified */
+			REPLICATE
+				('0', @StringSize - LEN(@YourNumber)) 
+			+ 
+			CAST
+				(@YourNumber AS VARCHAR(30))
+		)
+END
+
+SELECT 
+	dbo.ufnMyFunction(20, 10)
+
+GO
+
+CREATE PROCEDURE [dbo].[SQLDrills]
+AS
+/* Declares the cursor name and what the cursor will do */
+DECLARE RepairStore_Cursor CURSOR FOR  
+SELECT 
+	Name
+	,SUM(SubTotal) AS TotalSold
+FROM
+	Sales.Store s
+	INNER JOIN Sales.Customer c
+	ON s.BusinessEntityID = c.StoreID
+	INNER JOIN Sales.SalesOrderHeader soh
+	ON c.CustomerID = soh.CustomerID
+WHERE Name LIKE '%Repair%'
+GROUP BY
+	NAME
+/* Having is like where but comes after GROUP BY and you can use aggregate functions with it */
+HAVING SUM(SubTotal) > 100000
+OPEN RepairStore_Cursor;  
+/* Fetches the next row from the cursor */
+FETCH NEXT FROM RepairStore_Cursor;
+/* This means that the cursor will keep fetching rows untill it is unsucessful */
+WHILE @@FETCH_STATUS = 0  
+   BEGIN  
+      FETCH NEXT FROM RepairStore_Cursor;  
+   END;  
+CLOSE RepairStore_Cursor;  
+/* DEALLOCATE gets rid of the cursor */
+DEALLOCATE RepairStore_Cursor;  
+
+CREATE TABLE #PrizeWinners
+(
+	WinnerNames VARCHAR(30)
+)
+WHILE (SELECT COUNT(DISTINCT WinnerNames) FROM #PrizeWinners) < 3
+BEGIN
+INSERT INTO #PrizeWinners
+SELECT 
+	TOP 1
+	FirstName
+FROM Sales.SalesPerson sp 
+	INNER JOIN Person.Person p 
+	ON sp.BusinessEntityID = p.BusinessEntityID 
+	/* NEWID selects a random value */
+ORDER BY NEWID()
+END
+SELECT 
+	* 
+FROM 
+	#PrizeWinners
+
+DROP TABLE 
+	#PrizeWinners
+
+SELECT 
+	Name
+FROM 
+	Sales.Store
+WHERE
+	/* EXISTS returns true or false depending on if any rows are returned */
+	EXISTS(
+		SELECT 
+			Name
+		FROM 
+			Production.Product
+		WHERE
+			Color = 'Blue'
+		)
+	AND Name LIKE '%Blue%'
+		
