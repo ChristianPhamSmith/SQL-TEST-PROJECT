@@ -16,6 +16,7 @@ https://www.youtube.com/watch?v=37fme36GOnA
 https://www.red-gate.com/simple-talk/databases/sql-server/learn/the-xml-methods-in-sql-server/ 
 https://blog.sqlauthority.com/2012/04/27/sql-server-introduction-to-discovering-xml-data-type-methods-a-primer/ 
 https://dba.stackexchange.com/questions/177532/how-does-this-derived-table-with-cross-apply-work 
+https://www.youtube.com/watch?v=mj4qodGsgDA
 https://www.youtube.com/watch?v=K1WeoKxLZ5o 
 https://www.youtube.com/watch?v=ozy31aJpW-o 
 https://www.youtube.com/watch?v=CA9RFedFXlg 
