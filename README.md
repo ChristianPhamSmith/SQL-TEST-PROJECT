@@ -11,6 +11,7 @@ https://www.w3schools.com/sql/sql_between.asp
 https://www.red-gate.com/simple-talk/databases/sql-server/learn/subqueries-in-sql-server/
 https://www.youtube.com/watch?v=xKfgqH2HzUM
 https://stackoverflow.com/questions/19165213/how-to-query-for-xml-values-and-attributes-from-table-in-sql-server 
+https://docs.microsoft.com/en-us/sql/t-sql/xml/nodes-method-xml-data-type?view=sql-server-ver15
 https://www.youtube.com/watch?v=odYrlGPDJ2g&list=WL&index=659 
 https://www.youtube.com/watch?v=37fme36GOnA 
 https://www.red-gate.com/simple-talk/databases/sql-server/learn/the-xml-methods-in-sql-server/ 
