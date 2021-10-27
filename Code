@@ -1,3 +1,5 @@
+	/* step 3 */
+
 SELECT TOP 100 
 	soh.SalesOrderID 
 	,RevisionNumber 
@@ -40,6 +42,8 @@ FROM Sales.SalesOrderHeader soh
 
 
 GO
+
+	/* Step 4 */
 
 CREATE PROCEDURE [dbo].[SalesOrderDetails]
 AS
@@ -96,6 +100,8 @@ EXEC [dbo].[SalesOrderDetails]
 
 GO
 
+	/* Step 6 */
+
 CREATE PROCEDURE [dbo].[SalesOrdersDataReview]
 AS
 
@@ -143,6 +149,8 @@ EXEC [dbo].[SalesOrdersDataReview]
 
 GO
 
+	/* Step 8 a-c */
+
 CREATE PROCEDURE [dbo].[XMLFun]
 AS
 CREATE TABLE #breakfast_menu
@@ -157,12 +165,12 @@ CREATE TABLE #breakfast_menu
 INSERT INTO
 	#breakfast_menu
 	SELECT
-		/* The query method allows you to extract data from a XML file. The value method is like the query method but you can specify the datatype */
-		a.food.value('@id','VARCHAR(4)') AS FoodId
-		,a.food.query('name').value('.','VARCHAR(30)') AS Name
-		,a.food.query('price').value('.','VARCHAR(7)') AS Price
-		,a.food.query('description').value('.','VARCHAR(100)') AS Description
-		,a.food.query('calories').value('.','VARCHAR(4)') AS Calories
+		/* The value method allows you to select the data from the XML and allows you to specify the datatype. The [1] specifies that one value is returned. */
+		t.food.value('@id','VARCHAR(4)') AS FoodId
+		,t.food.value('name [1]','VARCHAR(30)') AS Name
+		,t.food.value('price [1]','VARCHAR(7)') AS Price
+		,t.food.value('description [1]','VARCHAR(100)') AS Description
+		,t.food.value('calories [1]','VARCHAR(4)') AS Calories
 	FROM
 	(
 	SELECT
@@ -172,19 +180,24 @@ INSERT INTO
 	/* OPENROWSET connects SQL Server with the XML file. Bulk and SINGLE_BLOB turns the imported data into a single row */
 		OPENROWSET(BULK 'C:\XML_BreakfastMenu.xml', SINGLE_BLOB) AS t(c)
 	) AS s(c)
-	/* CROSS APPLY with nodes goes through the XML and returns the XML in rows based on the nodes in the XML */
-	CROSS APPLY c.nodes('breakfast_menu/food') AS a(food)
+	/* CROSS APPLY with nodes goes through the XML and returns the XML in rows based on the specified nodes in the XML */
+	CROSS APPLY c.nodes('breakfast_menu/food') AS t(food)
 
+
+	/* Step 8 d */
 
 SELECT 
 	FoodId AS [@id]
-	,Name AS [name]
-	,Price AS [price]
-	,Description AS [description]
-	,Calories AS [calories]
+	,Name AS Name
+	,Price AS Price
+	,Description AS Description
+	,Calories AS Calories
 FROM 
 	#breakfast_menu
+	/* FOR XML PATH transforms the select statment results into XML format. The value by path creates a row called "food" and ROOT creates a root called "breakfast_menu" */
 FOR XML PATH('food'), ROOT('breakfast_menu')
+
+	/* Step 8 e */
 
 SELECT
 	/* The STUFF fuction goes and deletes part of a string and inserts what you specified into the string */
@@ -207,6 +220,8 @@ GO
 EXEC [dbo].[XMLFun]
 
 GO
+
+	/* Step 9 */
 
 CREATE PROCEDURE [dbo].[SalesOrdersDataReviewWithCTE]
 AS
@@ -236,6 +251,8 @@ FROM
 
 GO
 
+	/* Step 10 */
+
 CREATE PROCEDURE [dbo].[SalesByYearBySalesperson]
 AS
 SELECT
@@ -262,6 +279,8 @@ PIVOT
 
 GO
 
+	/* Step 11 */
+
 CREATE FUNCTION dbo.ufnMyFunction
 /* This creates the parameters for the function */
 (
@@ -286,6 +305,8 @@ SELECT
 	dbo.ufnMyFunction(20, 10)
 
 GO
+
+	/* Step 12 like operator, having clause, looping with cursor */
 
 CREATE PROCEDURE [dbo].[SQLDrills]
 AS
@@ -317,6 +338,8 @@ CLOSE RepairStore_Cursor;
 /* DEALLOCATE gets rid of the cursor */
 DEALLOCATE RepairStore_Cursor;  
 
+/* Step 12 looping without cursor, distinct operator, temp table */
+
 CREATE TABLE #PrizeWinners
 (
 	WinnerNames VARCHAR(30)
@@ -341,6 +364,14 @@ FROM
 DROP TABLE 
 	#PrizeWinners
 
+	/* Step 12 table variables, exists condition */
+
+/* A table variable is like a temp table but it stops existing after the the procedure is closed */
+DECLARE @BlueTable TABLE
+(
+  Name VARCHAR(50)
+)
+INSERT INTO @BlueTable
 SELECT 
 	Name
 FROM 
@@ -356,4 +387,5 @@ WHERE
 			Color = 'Blue'
 		)
 	AND Name LIKE '%Blue%'
-		
+
+SELECT * FROM @BlueTable
