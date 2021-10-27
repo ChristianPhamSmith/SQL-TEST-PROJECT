@@ -47,7 +47,7 @@ GO
 
 CREATE PROCEDURE [dbo].[SalesOrderDetails]
 AS
-SELECT
+SELECT TOP 100 
 	soh.SalesOrderID 
 	,RevisionNumber
 	,OrderDate 
@@ -200,8 +200,8 @@ FOR XML PATH('food'), ROOT('breakfast_menu')
 	/* Step 8 e */
 
 SELECT
-	/* The STUFF fuction goes and deletes part of a string and inserts what you specified into the string */
-	STUFF(Name + ', ', 1, 0, '')
+	/* The STUFF fuction goes and deletes part of a string and inserts what you specified into the string. (string, start, length, string replacment) */
+	STUFF(Name + 'x', LEN(Name + 'x'), 1, ', ')
 FROM
 	#breakfast_menu
 FOR XML PATH(''), ROOT('list')
