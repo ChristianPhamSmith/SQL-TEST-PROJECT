@@ -32,3 +32,4 @@ https://www.youtube.com/watch?v=gbu9NPrA1qw
 https://www.java67.com/2019/06/difference-between-where-and-having-in-sql.html 
 https://docs.microsoft.com/en-us/sql/t-sql/functions/fetch-status-transact-sql?view=sql-server-ver15 
 https://docs.microsoft.com/en-us/sql/t-sql/language-elements/deallocate-transact-sql?view=sql-server-ver15 
+https://odetocode.com/articles/365.aspx
