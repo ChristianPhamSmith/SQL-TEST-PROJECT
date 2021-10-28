@@ -1,7 +1,7 @@
 	/* step 3 */
 
 SELECT TOP 100 
-	soh.SalesOrderID 
+	 soh.SalesOrderID 
 	,RevisionNumber 
 	,OrderDate 
 	/* The Replace function replaces a value with a different value */
@@ -38,8 +38,9 @@ FROM Sales.SalesOrderHeader soh
 	INNER JOIN Production.ProductSubcategory ps
 		ON p.ProductSubcategoryID = ps.ProductSubcategoryID
 	INNER JOIN Production.ProductCategory pc
-		ON ps.ProductCategoryID = pc.ProductCategoryID
-
+		ON ps.ProductCategoryID = pc.ProductCategoryID 
+ORDER BY 
+	 soh.SalesOrderID
 
 GO
 
@@ -48,7 +49,7 @@ GO
 CREATE PROCEDURE [dbo].[SalesOrderDetails]
 AS
 SELECT TOP 100 
-	soh.SalesOrderID 
+	 soh.SalesOrderID 
 	,RevisionNumber
 	,OrderDate 
 	,Replace(Replace(Replace(replace(replace(replace(Status, 1, 'In Process'), 2, 'Approved'), 3, 'Backordered'), 4, 'Rejected'), 5, 'Shipped'), 6, 'Cancelled') AS OrderStatusText
@@ -90,6 +91,9 @@ WHERE OrderDate BETWEEN
 	/*'2011-07-04' AND '2011-07-10'*/
 	/*'2012-01-01' AND '2012-12-31'*/
 	/*'2013-12-01' AND '2013-12-25'*/
+ORDER BY 
+	 soh.SalesOrderID
+
 GO
 
 DROP PROCEDURE [dbo].[SalesOrderDetails]
@@ -108,7 +112,7 @@ AS
 /* # allows you to create a temporary table */
 CREATE TABLE #CalculatedSubtotal
 	(
-	SalesOrderID INT
+	 SalesOrderID INT
 	,CalculatedSubtotalFromDetail DEC (15,6)
 	)
 
@@ -116,7 +120,7 @@ CREATE TABLE #CalculatedSubtotal
 INSERT INTO 
 	#CalculatedSubtotal
 	SELECT
-		SalesOrderID
+		 SalesOrderID
 		,SUM(LineTotal)
 	FROM
 		Sales.SalesOrderDetail
@@ -126,7 +130,7 @@ INSERT INTO
 
 
 SELECT
-	soh.SalesOrderID
+	 soh.SalesOrderID
 	,SalesOrderNumber
 	,SubTotal AS OriginalSubtotal
 	,CalculatedSubtotalFromDetail
@@ -134,9 +138,9 @@ SELECT
 FROM
 	Sales.SalesOrderHeader soh
 	INNER JOIN Sales.SalesOrderDetail sod
-	ON soh.SalesOrderID = sod.SalesOrderID
+		ON soh.SalesOrderID = sod.SalesOrderID
 	INNER JOIN #CalculatedSubtotal cs
-	ON soh.SalesOrderID = cs.SalesOrderID
+		ON soh.SalesOrderID = cs.SalesOrderID
 
 GO
 
@@ -155,7 +159,7 @@ CREATE PROCEDURE [dbo].[XMLFun]
 AS
 CREATE TABLE #breakfast_menu
 	(
-	FoodId VARCHAR(4)
+	 FoodId VARCHAR(4)
 	,Name VARCHAR(30)
 	,Price VARCHAR(7)
 	,Description VARCHAR(100)
@@ -166,7 +170,7 @@ INSERT INTO
 	#breakfast_menu
 	SELECT
 		/* The value method allows you to select the data from the XML and allows you to specify the datatype. The [1] specifies that one value is returned. */
-		t.food.value('@id','VARCHAR(4)') AS FoodId
+		 t.food.value('@id','VARCHAR(4)') AS FoodId
 		,t.food.value('name [1]','VARCHAR(30)') AS Name
 		,t.food.value('price [1]','VARCHAR(7)') AS Price
 		,t.food.value('description [1]','VARCHAR(100)') AS Description
@@ -187,7 +191,7 @@ INSERT INTO
 	/* Step 8 d */
 
 SELECT 
-	FoodId AS [@id]
+	 FoodId AS [@id]
 	,Name AS Name
 	,Price AS Price
 	,Description AS Description
@@ -229,7 +233,7 @@ AS
 WITH CTE_CalculatedSubtotal AS 
 (
 SELECT
-	SalesOrderID
+	 SalesOrderID
 	,SUM(LineTotal) as CalculatedSubtotalFromDetail
 FROM
 	Sales.SalesOrderDetail
@@ -237,7 +241,7 @@ GROUP BY
 	SalesOrderID
 )
 SELECT
-	soh.SalesOrderID
+	 soh.SalesOrderID
 	,SalesOrderNumber
 	,SubTotal AS OriginalSubtotal
 	,CalculatedSubtotalFromDetail
@@ -245,9 +249,9 @@ SELECT
 FROM
 	Sales.SalesOrderHeader soh
 	INNER JOIN Sales.SalesOrderDetail sod
-	ON soh.SalesOrderID = sod.SalesOrderID
+		ON soh.SalesOrderID = sod.SalesOrderID
 	INNER JOIN CTE_CalculatedSubtotal cs
-	ON soh.SalesOrderID = cs.SalesOrderID
+		ON soh.SalesOrderID = cs.SalesOrderID
 
 GO
 
@@ -256,7 +260,7 @@ GO
 CREATE PROCEDURE [dbo].[SalesByYearBySalesperson]
 AS
 SELECT
-	SalesPersonID
+	 SalesPersonID
 	,[2011]
 	,[2012]
 	,[2013]
@@ -264,7 +268,7 @@ SELECT
 FROM
 (
 SELECT DISTINCT
-	SalesPersonID
+	 SalesPersonID
 	,DATENAME(YEAR, OrderDate) [Year]
 	,SubTotal
 FROM Sales.SalesOrderHeader soh
@@ -284,14 +288,15 @@ GO
 CREATE FUNCTION dbo.ufnMyFunction
 /* This creates the parameters for the function */
 (
-	@YourNumber INT
+	 @YourNumber INT
 	,@StringSize INT
 )
 RETURNS VARCHAR(30)
 AS
 BEGIN
 	RETURN 
-		(SELECT 
+		(
+		SELECT 
 			/* Replicate will replicate the string for the number of times specified */
 			REPLICATE
 				('0', @StringSize - LEN(@YourNumber)) 
@@ -302,7 +307,7 @@ BEGIN
 END
 
 SELECT 
-	dbo.ufnMyFunction(20, 10)
+	dbo.ufnMyFunction(20, 3)
 
 GO
 
@@ -313,14 +318,14 @@ AS
 /* Declares the cursor name and what the cursor will do */
 DECLARE RepairStore_Cursor CURSOR FOR  
 SELECT 
-	Name
+	 Name
 	,SUM(SubTotal) AS TotalSold
 FROM
 	Sales.Store s
 	INNER JOIN Sales.Customer c
-	ON s.BusinessEntityID = c.StoreID
+		ON s.BusinessEntityID = c.StoreID
 	INNER JOIN Sales.SalesOrderHeader soh
-	ON c.CustomerID = soh.CustomerID
+		ON c.CustomerID = soh.CustomerID
 WHERE Name LIKE '%Repair%'
 GROUP BY
 	NAME
@@ -360,7 +365,6 @@ SELECT
 	* 
 FROM 
 	#PrizeWinners
-
 DROP TABLE 
 	#PrizeWinners
 
