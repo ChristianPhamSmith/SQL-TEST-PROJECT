@@ -4,7 +4,8 @@ Here is the list of resources that I used for this project:
 
   __Step 1__
 How to download and import AdventureWorks sample database for Microsoft SQL Server 2019 https://www.youtube.com/watch?v=FTKtNLmiIT0
-https://dataedo.com/samples/html/AdventureWorks/
+AdventureWorks – Data Dictionary https://dataedo.com/samples/html/AdventureWorks/
+Data Geeks meeting 10/27/2021 - "Thank you Mr. Honsowetz for mentioning that ORDER BY should be used with SELECT TOP"
 
   __Step 3__
 replace multiple values at the same time - in order to convert a string to a number https://stackoverflow.com/questions/23218337/replace-multiple-values-at-the-same-time-in-order-to-convert-a-string-to-a-num 
